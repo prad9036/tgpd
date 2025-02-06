@@ -1,3 +1,10 @@
 pymongo
 requests
 dotenv
+aiohttp
+https://github.com/KurimuzonAkuma/pyrogram/archive/refs/tags/v2.1.24.zip
+python-dotenv
+tgcrypto
+motor
+aiofiles
+dnspython
