@@ -45,12 +45,10 @@ st.markdown(
 )
 
 # Streamlit App Title
-st.title("Advanced Shell Runner (Custom Command Execution)")
+st.title("Simple Command Executor with Shell & URL Features")
 
 # Detect operating system
 os_type = platform.system()
-
-# Display the operating system
 st.write(f"Operating System: {os_type}")
 
 # Sidebar for environment variables
@@ -67,11 +65,22 @@ st.sidebar.header("Port and URL Settings")
 port = st.sidebar.text_input("Enter Port (e.g., 8080):", "")
 url = st.sidebar.text_input("Enter URL to view:", "")
 
-# Main Content Section
+# Command History
+if 'command_history' not in st.session_state:
+    st.session_state.command_history = []
+
 st.subheader("Shell Command Executor")
 
-# Input area for the shell command
+# Command input area
 command = st.text_input("Enter your shell command:", "")
+
+# Show Command History
+if st.session_state.command_history:
+    st.subheader("Command History")
+    for idx, cmd in enumerate(st.session_state.command_history, 1):
+        if st.button(f"Run Command {idx}: {cmd}"):
+            command = cmd
+            st.experimental_rerun()
 
 # Display the entered URL content if URL is provided
 if url:
@@ -110,6 +119,11 @@ if st.button("Run Command"):
             if result.stderr:
                 st.subheader("Error:")
                 st.text(result.stderr)
+
+            # Add to Command History
+            if command not in st.session_state.command_history:
+                st.session_state.command_history.append(command)
+            
         except Exception as e:
             st.error(f"An error occurred: {e}")
     else:
@@ -119,16 +133,6 @@ if st.button("Run Command"):
 if port:
     st.markdown(f"### Port Info: \nYou entered port: **{port}**")
 
-# Additional section for file upload (for use in shell commands or others)
-st.subheader("Upload a File (Optional)")
-uploaded_file = st.file_uploader("Choose a file to upload", type=["txt", "log", "py", "sh"])
-
-if uploaded_file:
-    st.write(f"Uploaded file: {uploaded_file.name}")
-    # Display the first 200 characters of the file content
-    content = uploaded_file.getvalue().decode("utf-8")
-    st.text_area("File Content Preview", content[:200], height=100)
-
-# Display port URL if applicable
+# Display Port URL if applicable
 if port:
     st.markdown(f"### Server Running at: [http://localhost:{port}](http://localhost:{port})")
