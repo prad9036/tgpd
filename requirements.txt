@@ -8,3 +8,6 @@ tgcrypto
 motor
 aiofiles
 dnspython
+streamlit 
+pymongo 
+requests
