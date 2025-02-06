@@ -1,23 +1,12 @@
-from flask import Flask, jsonify
-from pymongo import MongoClient
-from bson import ObjectId
+import streamlit as st
+import streamlit.components.v1 as components
 
-app = Flask(__name__)
+# Title of the page
+st.title("Embed External Page in Streamlit")
 
-# MongoDB connection
-mongo_client = MongoClient('your_mongo_uri_here')
-db = mongo_client.get_database()
-collection = db.get_collection('files')  # Assuming a collection named 'files'
+# URL to embed (can be changed to any other URL)
+url = "http://localhost:8080"  # Or "https://filestreambot.streamlit.app/"
 
-@app.route('/watch/<file_id>', methods=['GET'])
-def watch_file(file_id):
-    file_object_id = ObjectId(file_id)
-    file = collection.find_one({"_id": file_object_id})
+# Embed the URL within an iframe in the Streamlit app
+components.iframe(url, width=800, height=600)
 
-    if file:
-        return jsonify(file)
-    else:
-        return jsonify({"error": "File not found"}), 404
-
-if __name__ == '__main__':
-    app.run(port=8080)
