@@ -154,38 +154,24 @@ import os
 import time
 
 # Function to get Instagram video URL using Instaloader
-def get_instagram_video_url(message_text):
+# Function to get Instagram video URL using yt-dlp
+def get_instagram_video_url(url):
     try:
-        L = instaloader.Instaloader()
+        # Use yt-dlp to fetch the video URL
+        command = ["/home/appuser/.local/bin/yt-dlp", "-g", url]
+        process = subprocess.run(command, capture_output=True, text=True, shell=False, creationflags=subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0)
 
-        # Extract the shortcode from the Instagram URL
-        shortcode = message_text.split('/')[-2]
-
-        # Load the post using the shortcode
-        post = instaloader.Post.from_shortcode(L.context, shortcode)
-
-        # Check if it's a video and return the video URL
-        if post.is_video:
-            return post.video_url
+        if process.returncode == 0:
+            # Extracted video URL
+            return process.stdout.strip()
         else:
+            # If yt-dlp fails, return an error message
             return None
-
-        if "instagram.com/" in url and len(url.split("/")) == 3:  # URL of the format: instagram.com/<username>
-            username = url.split("/")[2]
-            profile = instaloader.Profile.from_username(L.context, username)
-            # Return profile picture URL
-            return profile.profile_pic_url
-        
-        # For video posts (URL like: instagram.com/reel/<shortcode>)
-        shortcode = url.split('/')[-2]
-        post = instaloader.Post.from_shortcode(L.context, shortcode)
-
-        if post.is_video:
-            return post.video_url
-        else:
-            return None
+    except FileNotFoundError:
+        return "yt-dlp is not installed."
     except Exception as e:
-        return f"Error fetching Instagram video: {str(e)}"
+        return f"Error fetching Instagram video with yt-dlp: {str(e)}"
+
 
 def handle_user_request(chat_id, message_text):
     increment_active_users()
@@ -249,7 +235,7 @@ def handle_user_request(chat_id, message_text):
                         send_message(chat_id, "Please provide a valid URL.")
                         return
 
-                    command = ["yt-dlp", "-g", url]
+                    command = ["/home/appuser/.local/bin/yt-dlp", "-g", url]
                     process = subprocess.run(command, capture_output=True, text=True, shell=False, creationflags=subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0)
 
                     final_url = process.stdout.strip() if process.returncode == 0 else None
@@ -275,7 +261,7 @@ def handle_user_request(chat_id, message_text):
                         elif ("youtube.com" in url or "youtu.be" in url or "facebook.com" in url):
                             try:
                     # For YouTube or other video links, use yt-dlp
-                                command = ["yt-dlp","-g", url]
+                                command = ["/home/appuser/.local/bin/yt-dlp", "-g", url]
                                 process = subprocess.run(command, capture_output=True, text=True, shell=False, creationflags=subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0)
                                 if process.returncode == 0:
                                     final_url = process.stdout.strip()
