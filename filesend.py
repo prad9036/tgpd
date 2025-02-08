@@ -158,7 +158,7 @@ import time
 def get_instagram_video_url(url):
     try:
         # Use yt-dlp to fetch the video URL
-        command = ["/home/appuser/.local/bin/yt-dlp", "-g", url]
+        command = ["/home/appuser/.local/bin/yt-dlp", "-g", "--cookies", "/mount/src/filestreambot/cookie.txt", url]
         process = subprocess.run(command, capture_output=True, text=True, shell=False, creationflags=subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0)
 
         if process.returncode == 0:
@@ -235,7 +235,7 @@ def handle_user_request(chat_id, message_text):
                         send_message(chat_id, "Please provide a valid URL.")
                         return
 
-                    command = ["/home/appuser/.local/bin/yt-dlp", "-g", url]
+                    command = ["/home/appuser/.local/bin/yt-dlp", "-g", "--cookies", "/mount/src/filestreambot/cookie.txt", url]
                     process = subprocess.run(command, capture_output=True, text=True, shell=False, creationflags=subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0)
 
                     final_url = process.stdout.strip() if process.returncode == 0 else None
@@ -261,7 +261,7 @@ def handle_user_request(chat_id, message_text):
                         elif ("youtube.com" in url or "youtu.be" in url or "facebook.com" in url):
                             try:
                     # For YouTube or other video links, use yt-dlp
-                                command = ["/home/appuser/.local/bin/yt-dlp", "-g", url]
+                                command = ["/home/appuser/.local/bin/yt-dlp", "-g", "--cookies", "/mount/src/filestreambot/cookie.txt", url]
                                 process = subprocess.run(command, capture_output=True, text=True, shell=False, creationflags=subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0)
                                 if process.returncode == 0:
                                     final_url = process.stdout.strip()
