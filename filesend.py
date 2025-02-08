@@ -11,7 +11,7 @@ import sys
 import re
 
 # Telegram Bot Token
-BOT_TOKEN =  os.getenv('bttkn') 
+BOT_TOKEN = os.getenv('bttkn')
 TELEGRAM_API_URL = f'https://api.telegram.org/bot{BOT_TOKEN}'
 
 # State management for users
@@ -154,24 +154,48 @@ import os
 import time
 
 # Function to get Instagram video URL using Instaloader
-# Function to get Instagram video URL using yt-dlp
-def get_instagram_video_url(url):
+import instaloader
+import os
+
+# Full path to Instaloader binary (if needed for execution)
+INSTALOADER_PATH = "/home/appuser/.local/bin/instaloader"
+
+def get_instagram_media_url(message_text):
     try:
-        # Use yt-dlp to fetch the video URL
-        command = ["/home/appuser/.local/bin/yt-dlp", "-g", "--cookies", "/mount/src/filestreambot/cookie.txt", url]
-        process = subprocess.run(command, capture_output=True, text=True, shell=False, creationflags=subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0)
+        # Use Instaloader with a custom path (optional)
+        os.environ["PATH"] += os.pathsep + os.path.dirname(INSTALOADER_PATH)
 
-        if process.returncode == 0:
-            # Extracted video URL
-            return process.stdout.strip()
+        # Initialize Instaloader
+        L = instaloader.Instaloader()
+
+        # Ensure URL is valid
+        if "instagram.com/" not in message_text:
+            return "Invalid Instagram URL."
+
+        # Extract the shortcode or username
+        url_parts = message_text.rstrip('/').split('/')
+
+        if len(url_parts) < 4:
+            return "Invalid URL format."
+
+        content_type = url_parts[-2]  # 'p', 'reel', 'tv', or username
+        identifier = url_parts[-1]    # Shortcode or username
+
+        # Handle Profile Picture URL (if it’s a username, not a post)
+        if content_type not in ["p", "reel", "tv"]:
+            profile = instaloader.Profile.from_username(L.context, identifier)
+            return profile.profile_pic_url
+
+        # Handle Posts, Reels, and IGTV
+        post = instaloader.Post.from_shortcode(L.context, identifier)
+
+        if post.is_video:
+            return post.video_url
         else:
-            # If yt-dlp fails, return an error message
-            return None
-    except FileNotFoundError:
-        return "yt-dlp is not installed."
-    except Exception as e:
-        return f"Error fetching Instagram video with yt-dlp: {str(e)}"
+            return post.url  # Return image URL if not a video
 
+    except Exception as e:
+        return f"Error fetching Instagram media: {str(e)}"
 
 def handle_user_request(chat_id, message_text):
     increment_active_users()
@@ -235,7 +259,7 @@ def handle_user_request(chat_id, message_text):
                         send_message(chat_id, "Please provide a valid URL.")
                         return
 
-                    command = ["/home/appuser/.local/bin/yt-dlp", "-g", "--cookies", "/mount/src/filestreambot/cookie.txt", url]
+                    command = ["/home/appuser/.local/bin/yt-dlp", "-g", url]
                     process = subprocess.run(command, capture_output=True, text=True, shell=False, creationflags=subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0)
 
                     final_url = process.stdout.strip() if process.returncode == 0 else None
@@ -261,7 +285,7 @@ def handle_user_request(chat_id, message_text):
                         elif ("youtube.com" in url or "youtu.be" in url or "facebook.com" in url):
                             try:
                     # For YouTube or other video links, use yt-dlp
-                                command = ["/home/appuser/.local/bin/yt-dlp", "-g", "--cookies", "/mount/src/filestreambot/cookie.txt", url]
+                                command = ["/home/appuser/.local/bin/yt-dlp", "-g", url]
                                 process = subprocess.run(command, capture_output=True, text=True, shell=False, creationflags=subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0)
                                 if process.returncode == 0:
                                     final_url = process.stdout.strip()
